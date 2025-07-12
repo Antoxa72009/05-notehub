@@ -21,7 +21,7 @@ const initialValues: NoteFormValues = {
 };
 
 const validationSchema = Yup.object({
-  title: Yup.string().min(3).max(50).required('Required'),
+  title: Yup.string().min(3).max(50).required('Title is required'),
   content: Yup.string().max(500),
   tag: Yup.mixed<NoteTag>().oneOf(['Todo', 'Work', 'Personal', 'Meeting', 'Shopping']).required(),
 });

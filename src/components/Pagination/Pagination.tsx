@@ -1,5 +1,5 @@
 import ReactPaginate from 'react-paginate';
-import styles from './Pagination.module.css'; // Імпортуйте як CSS Module
+import styles from './Pagination.module.css';
 
 interface PaginationProps {
   pageCount: number;
@@ -15,10 +15,9 @@ const Pagination = ({ pageCount, currentPage, onPageChange }: PaginationProps) =
   return (
     <div
       onClick={(e) => {
-        const target = e.target as HTMLElement;
-        // Перевіряємо, чи клік був на елементі пагінації з класом, щоб уникнути блокування інших кліків
+        const target = e.target as HTMLElement;        
         if (target.closest(`.${styles.pagination} a`)) {
-          e.preventDefault(); // блокуємо перезавантаження сторінки при кліку на посилання
+          e.preventDefault(); 
         }
       }}
     >
@@ -26,9 +25,9 @@ const Pagination = ({ pageCount, currentPage, onPageChange }: PaginationProps) =
         pageCount={pageCount}
         forcePage={currentPage - 1}
         onPageChange={handlePageClick}
-        containerClassName={styles.pagination} // Застосовуємо клас з CSS Module
-        pageLinkClassName={styles['page-link']} // Додаємо клас для посилань сторінок (якщо потрібно стилізувати їх окремо)
-        activeClassName={styles.active} // Застосовуємо активний клас з CSS Module
+        containerClassName={styles.pagination} 
+        pageLinkClassName={styles['page-link']} 
+        activeClassName={styles.active} 
         previousLabel="<"
         nextLabel=">"
         breakLabel="..."

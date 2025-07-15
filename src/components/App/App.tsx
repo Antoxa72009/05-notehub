@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchNotes, deleteNote, createNote, type FetchNotesResponse, type ErrorResponse} from '../../services/noteService';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchNotes } from '../../services/noteService';
+import type { ErrorResponse } from '../../services/noteService';
 import NoteList from '../NoteList/NoteList';
 import SearchBox from '../SearchBox/SearchBox';
 import Pagination from '../Pagination/Pagination';
 import Modal from '../Modal/Modal';
-import NoteForm, { type NoteFormValues } from '../NoteForm/NoteForm';
+import NoteForm from '../NoteForm/NoteForm';
 import { useDebounce } from '../../hooks/useDebounce';
 import css from './App.module.css';
-import { AxiosError } from 'axios'; 
+import { AxiosError } from 'axios';
 
 import Loader from '../Loader/Loader';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
@@ -21,43 +22,27 @@ const App = () => {
   const debouncedSearch = useDebounce(search, 500);
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError, error } = useQuery<FetchNotesResponse, AxiosError<ErrorResponse>>({
-    queryKey: ['notes', page, debouncedSearch],
-    queryFn: () => fetchNotes({ page, perPage: 12, search: debouncedSearch }),
-    retry: (failureCount, err) => {
-        if (err.response?.status === 400 || err.response?.status === 401 || err.response?.status === 403) {
-            return false;
-        }
-        return failureCount < 3;
-    },
-  });
-
-  const { mutate: handleDelete } = useMutation({
-    mutationFn: deleteNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-    },
-    onError: (err: AxiosError<ErrorResponse>) => {
-      console.error("Помилка видалення нотатки:", err.message, err.response?.data);
-      alert("Не вдалося видалити нотатку: " + (err.response?.data?.message || err.message));
+  const { data, isLoading, isError, error } = useQuery({
+  queryKey: ['notes', page, debouncedSearch],
+  queryFn: () => fetchNotes({ page, perPage: 12, search: debouncedSearch }),
+  placeholderData: () => ({
+    notes: [],
+    page,
+    perPage: 12,
+    totalPages: 1,
+    totalNotes: 0,
+  }),
+  retry: (failureCount, err: AxiosError<ErrorResponse>) => {
+    if (
+      err.response?.status === 400 ||
+      err.response?.status === 401 ||
+      err.response?.status === 403
+    ) {
+      return false;
     }
-  });
-
-  const { mutate: handleCreate } = useMutation({
-    mutationFn: createNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      setIsModalOpen(false);
-    },
-    onError: (err: AxiosError<ErrorResponse>) => {
-      console.error("Помилка створення нотатки:", err.message, err.response?.data);
-      alert("Не вдалося створити нотатку: " + (err.response?.data?.message || err.message));
-    }
-  });
-
-  const handleNoteSubmit = (values: NoteFormValues) => {
-    handleCreate(values);
-  };
+    return failureCount < 3;
+  },
+});
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -73,11 +58,11 @@ const App = () => {
             Create note +
           </button>
         </header>
-        <Loader /> 
+        <Loader />
       </div>
     );
   }
-  
+
   if (isError) {
     return (
       <div className={css.app}>
@@ -87,7 +72,9 @@ const App = () => {
             Create note +
           </button>
         </header>
-        <ErrorMessage message={`Помилка завантаження нотаток: ${error?.response?.data?.message || error?.message || 'Невідома помилка'}`} />
+        <ErrorMessage
+          message={`Помилка завантаження нотаток: ${error?.response?.data?.message || error?.message || 'Невідома помилка'}`}
+        />
         <button onClick={() => queryClient.invalidateQueries({ queryKey: ['notes'] })}>
           Спробувати ще раз
         </button>
@@ -103,11 +90,7 @@ const App = () => {
       <header className={css.toolbar}>
         <SearchBox value={search} onChange={handleSearchChange} />
         {totalPages > 1 && (
-          <Pagination
-            pageCount={totalPages}
-            currentPage={page}         
-            onPageChange={setPage}    
-          />
+          <Pagination pageCount={totalPages} currentPage={page} onPageChange={setPage} />
         )}
         <button className={css.button} onClick={() => setIsModalOpen(true)}>
           Create note +
@@ -119,12 +102,12 @@ const App = () => {
           <p>Нотаток немає. Створіть свою першу нотатку!</p>
         </div>
       ) : (
-        <NoteList notes={notes} onDelete={handleDelete} />
+        <NoteList notes={notes} />
       )}
 
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm onSubmit={handleNoteSubmit} onCancel={() => setIsModalOpen(false)} />
+          <NoteForm onCancel={() => setIsModalOpen(false)} />
         </Modal>
       )}
     </div>

@@ -14,8 +14,16 @@ const Modal = ({ children, onClose }: ModalProps) => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
+
     window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+
+    // ✅ Забороняємо прокрутку при відкритій модалці
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = 'auto'; // ✅ Повертаємо прокрутку після закриття
+    };
   }, [onClose]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
